@@ -9,15 +9,17 @@ clang++ -stdlib=libc++ -g -O3 toy.cpp `llvm-config --cxxflags` -o toy.bin
 
 
  ## Chapter 2 tests to run in the kaliedoscop REPL:
- ~/work/compiler_design/Kaleidoscope$ ./toy.bin 
- ready> def foo(x y) x+foo(y, 4.0);
- ready> Parsed a function definition.
- ready> def foo(x y) x+y y;
- ready> Parsed a function definition.
- ready> Parsed a top-level expression.
- ready> def foo(x y) x+y );
- ready> Parsed a function definition.
- ready> Error: unknown token when expecting an expression
- ready> extern sin(a);
- ready> Parsed an extern.
- ready> 
+ <verbatim>
+ ~/work/compiler_design/Kaleidoscope$ ./toy.bin <br />
+ ready> def foo(x y) x+foo(y, 4.0); <br />
+ ready> Parsed a function definition. <br />
+ ready> def foo(x y) x+y y; <br />
+ ready> Parsed a function definition. <br />
+ ready> Parsed a top-level expression. <br />
+ ready> def foo(x y) x+y ); <br />
+ ready> Parsed a function definition. <br />
+ ready> Error: unknown token when expecting an expression <br />
+ ready> extern sin(a); <br />
+ ready> Parsed an extern. <br />
+ ready> <br />
+ </verbatim>
