@@ -8,7 +8,7 @@ sudo apt-get install libc++abi-dev
 clang++ -stdlib=libc++ -g -O3 toy.cpp `llvm-config --cxxflags` -o toy.bin
 
 
- ## Chapter 2 tests to run in the kaliedoscop REPL:
+ ## Chapter 2 tests to run in the kaliedoscope REPL:
  <verbatim>
  ~/work/compiler_design/Kaleidoscope$ ./toy.bin <br />
  ready> def foo(x y) x+foo(y, 4.0); <br />
