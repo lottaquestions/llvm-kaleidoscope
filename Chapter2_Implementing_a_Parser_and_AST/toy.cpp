@@ -117,6 +117,7 @@ namespace{
 class ExprAST{
 public:
   virtual ~ExprAST() = default;
+  virtual Value *codegen() = 0;
 };
 
 // NumberExprAST - Expression class for numeric literals like "1.0".
@@ -124,6 +125,7 @@ class NumberExprAST : public ExprAST{
   double Val;
 public:
   NumberExprAST(double Val) : Val(Val){}
+  Value *codegen() override;
 };
 
 // VariableExprAST - Expression class for referencing a variable, like "a"
