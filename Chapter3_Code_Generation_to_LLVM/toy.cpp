@@ -34,38 +34,38 @@
 // Below namespace code has been lifted directly from
 // https://stackoverflow.com/questions/24365331/how-can-i-generate-uuid-in-c-without-using-boost-library
 namespace uuid {
-    static std::random_device              rd;
-    static std::mt19937                    gen(rd());
-    static std::uniform_int_distribution<> dis(0, 15);
-    static std::uniform_int_distribution<> dis2(8, 11);
+  static std::random_device              rd;
+  static std::mt19937                    gen(rd());
+  static std::uniform_int_distribution<> dis(0, 15);
+  static std::uniform_int_distribution<> dis2(8, 11);
 
-    std::string generate_uuid_v4() {
-        std::stringstream ss;
-        int i;
-        ss << std::hex;
-	ss << "_";
-        for (i = 0; i < 8; i++) {
-            ss << dis(gen);
-        }
-        ss << "_";
-        for (i = 0; i < 4; i++) {
-            ss << dis(gen);
-        }
-        ss << "_";
-        for (i = 0; i < 3; i++) {
-            ss << dis(gen);
-        }
-        ss << "_";
-        ss << dis2(gen);
-        for (i = 0; i < 3; i++) {
-            ss << dis(gen);
-        }
-        ss << "_";
-        for (i = 0; i < 12; i++) {
-            ss << dis(gen);
-        };
-        return ss.str();
+  std::string generate_uuid_v4() {
+    std::stringstream ss;
+    int i;
+    ss << std::hex;
+    ss << "_";
+    for (i = 0; i < 8; i++) {
+      ss << dis(gen);
     }
+    ss << "_";
+    for (i = 0; i < 4; i++) {
+      ss << dis(gen);
+    }
+    ss << "_";
+    for (i = 0; i < 3; i++) {
+      ss << dis(gen);
+    }
+    ss << "_";
+    ss << dis2(gen);
+    for (i = 0; i < 3; i++) {
+      ss << dis(gen);
+    }
+    ss << "_";
+    for (i = 0; i < 12; i++) {
+      ss << dis(gen);
+    };
+    return ss.str();
+  }
 }
 
  
@@ -106,11 +106,11 @@ static int gettok(){
     while (isalnum((LastChar = getchar())))
       IdentifierStr += LastChar;
 
-      if (IdentifierStr == "def")
-        return tok_def;
-      if (IdentifierStr == "extern")
-        return tok_extern;
-      return tok_identifier;
+    if (IdentifierStr == "def")
+      return tok_def;
+    if (IdentifierStr == "extern")
+      return tok_extern;
+    return tok_identifier;
   }
 
   if (isdigit(LastChar) || LastChar == '.'){ // Number: [0-9]+
@@ -154,71 +154,71 @@ static int gettok(){
 
 namespace{
 
-// ExprAST - Base class for all expression nodes.
-class ExprAST{
-public:
-  virtual ~ExprAST() = default;
-  virtual Value *codegen() = 0;
-};
+  // ExprAST - Base class for all expression nodes.
+  class ExprAST{
+  public:
+    virtual ~ExprAST() = default;
+    virtual Value *codegen() = 0;
+  };
 
-// NumberExprAST - Expression class for numeric literals like "1.0".
-class NumberExprAST : public ExprAST{
-  double Val;
-public:
-  NumberExprAST(double Val) : Val(Val){}
-  Value *codegen() override;
-};
+  // NumberExprAST - Expression class for numeric literals like "1.0".
+  class NumberExprAST : public ExprAST{
+    double Val;
+  public:
+    NumberExprAST(double Val) : Val(Val){}
+    Value *codegen() override;
+  };
 
-// VariableExprAST - Expression class for referencing a variable, like "a"
-class VariableExprAST : public ExprAST{
-  std::string Name;
-public:
-  VariableExprAST(const std::string& Name) : Name(Name){}
-  Value *codegen() override;
-};
+  // VariableExprAST - Expression class for referencing a variable, like "a"
+  class VariableExprAST : public ExprAST{
+    std::string Name;
+  public:
+    VariableExprAST(const std::string& Name) : Name(Name){}
+    Value *codegen() override;
+  };
 
-// BinaryExprAST - Expression class for a binary operator
-class BinaryExprAST : public ExprAST{
-  char Op;
-  std::unique_ptr<ExprAST> LHS, RHS;
+  // BinaryExprAST - Expression class for a binary operator
+  class BinaryExprAST : public ExprAST{
+    char Op;
+    std::unique_ptr<ExprAST> LHS, RHS;
 
-public:
-  BinaryExprAST(char Op, std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
-  : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)){}
-  Value *codegen() override;
-};
+  public:
+    BinaryExprAST(char Op, std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
+      : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)){}
+    Value *codegen() override;
+  };
 
-// CallExprAST - Expression class for function calls
-class CallExprAST : public ExprAST{
-  std::string Callee;
-  std::vector<std::unique_ptr<ExprAST>> Args;
-public:
-  CallExprAST(const std::string& Callee, std::vector<std::unique_ptr<ExprAST>> Args)
-  : Callee(Callee), Args(std::move(Args)){}
-  Value *codegen() override;
-};
+  // CallExprAST - Expression class for function calls
+  class CallExprAST : public ExprAST{
+    std::string Callee;
+    std::vector<std::unique_ptr<ExprAST>> Args;
+  public:
+    CallExprAST(const std::string& Callee, std::vector<std::unique_ptr<ExprAST>> Args)
+      : Callee(Callee), Args(std::move(Args)){}
+    Value *codegen() override;
+  };
 
-// PrototypeAST - This class represents the prototype of a funtion,
-// which captures its name, and its argument names (thus implicitly the number of arguments the function takes).
-class PrototypeAST{
-  std::string Name;
-  std::vector<std::string> Args;
-public:
-  PrototypeAST(const std::string Name, std::vector<std::string> Args)
-  : Name(Name), Args(std::move(Args)){}
+  // PrototypeAST - This class represents the prototype of a funtion,
+  // which captures its name, and its argument names (thus implicitly the number of arguments the function takes).
+  class PrototypeAST{
+    std::string Name;
+    std::vector<std::string> Args;
+  public:
+    PrototypeAST(const std::string Name, std::vector<std::string> Args)
+      : Name(Name), Args(std::move(Args)){}
 
-  const std::string& getName() const {return Name;}
-  Function *codegen();
-};
+    const std::string& getName() const {return Name;}
+    Function *codegen();
+  };
 
-// FunctionAST - This class represents a function definition itself
-class FunctionAST{
-  std::unique_ptr<PrototypeAST> Proto;
-  std::unique_ptr<ExprAST> Body;
-public:
-  FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<ExprAST> Body) : Proto(std::move(Proto)), Body(std::move(Body)){}
-  Function *codegen();
-};
+  // FunctionAST - This class represents a function definition itself
+  class FunctionAST{
+    std::unique_ptr<PrototypeAST> Proto;
+    std::unique_ptr<ExprAST> Body;
+  public:
+    FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<ExprAST> Body) : Proto(std::move(Proto)), Body(std::move(Body)){}
+    Function *codegen();
+  };
 } // end of anonymous namespace
 
 // ================================
