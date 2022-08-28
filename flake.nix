@@ -21,8 +21,8 @@
                 buildInputs = [ llvmPackages.llvm ];
                 buildPhase = "clang++ -lLLVM-${llvmVersion} -std=c++14 toy.cpp -o toy.bin";
                 installPhase = ''
-                        ${coreutils}/bin/mkdir -pv $out/${chapter}/bin
-                        ${rsync}/bin/rsync -avz toy.bin $out/${chapter}/bin
+                        ${coreutils}/bin/mkdir -pv $out/bin
+                        ${rsync}/bin/rsync -avz toy.bin $out/bin
                       '';
               });
         in
@@ -32,12 +32,12 @@
               (rec {
                 name = "chapter2";
                 category = "kaleidscope";
-                command = let package = mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; }; in "${package}/Chapter2_Implementing_a_Parser_and_AST/toy.bin";
+                command = let package = mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; }; in "${package}/bin/toy.bin";
               })
               (rec {
                 name = "chapter3";
                 category = "kaleidscope";
-                command = let package = mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; }; in "${package}/toy.bin";
+                command = let package = mkDrv { chapter = "Chapter3_Code_Generation_to_LLVM"; }; in "${package}/bin/toy.bin";
               })
             ];
           };
