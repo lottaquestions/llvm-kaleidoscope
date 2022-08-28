@@ -11,29 +11,37 @@
               inherit system;
               overlays = [ devshell.overlay ];
             };
-        in
-          pkgs.devshell.mkShell {
-            name = "kaleidoscope";
-            imports = [ (pkgs.devshell.importTOML ./devshell.toml) ];
-            packages = with pkgs;
-              let mkDrv = { llvmVersion ? "10", chapter }:
-                    let llvmPackages = llvmPackages_10;
-                    in (llvmPackages.stdenv.mkDerivation rec {
-                      pname = "${chapter}";
-                      version = "${llvmVersion}";
-                      src = "${self}/${chapter}";
-                      nativeBuildInpts = [ binutils coreutils llvmPackages.clang ];
-                      buildInputs = [ llvmPackages.llvm ];
-                      buildPhase = "clang++ -lLLVM-${llvmVersion} -std=c++14 toy.cpp -o toy.bin";
-                      installPhase = ''
+            mkDrv = with pkgs; { llvmVersion ? "10", chapter }:
+              let llvmPackages = pkgs."llvmPackages_${llvmVersion}";
+              in (llvmPackages.stdenv.mkDerivation rec {
+                pname = "${chapter}";
+                version = "${llvmVersion}";
+                src = "${self}/${chapter}";
+                nativeBuildInpts = [ binutils coreutils llvmPackages.clang ];
+                buildInputs = [ llvmPackages.llvm ];
+                buildPhase = "clang++ -lLLVM-${llvmVersion} -std=c++14 toy.cpp -o toy.bin";
+                installPhase = ''
                         ${coreutils}/bin/mkdir -pv $out/${chapter}/bin
                         ${rsync}/bin/rsync -avz toy.bin $out/${chapter}/bin
                       '';
-                    });
-              in [
-                ( mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; })
-                ( mkDrv { chapter = "Chapter3_Code_Generation_to_LLVM"; })
-              ];
+              });
+        in
+          pkgs.devshell.mkShell {
+            name = "kaleidoscope";
+            commands = [
+              (rec {
+                name = "chapter2";
+                category = "kaleidscope";
+                package = mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; };
+                command = "${package}/Chapter2_Implementing_a_Parser_and_AST/toy.bin";
+              })
+              (rec {
+                name = "chapter4";
+                category = "kaleidscope";
+                package = mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; };
+                command = "${package}/toy.bin";
+              })
+            ];
           };
     });
 }
