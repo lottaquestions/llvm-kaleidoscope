@@ -32,14 +32,12 @@
               (rec {
                 name = "chapter2";
                 category = "kaleidscope";
-                package = mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; };
-                command = "${package}/Chapter2_Implementing_a_Parser_and_AST/toy.bin";
+                command = let package = mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; }; in "${package}/Chapter2_Implementing_a_Parser_and_AST/toy.bin";
               })
               (rec {
-                name = "chapter4";
+                name = "chapter3";
                 category = "kaleidscope";
-                package = mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; };
-                command = "${package}/toy.bin";
+                command = let package = mkDrv { chapter = "Chapter2_Implementing_a_Parser_and_AST"; }; in "${package}/toy.bin";
               })
             ];
           };
