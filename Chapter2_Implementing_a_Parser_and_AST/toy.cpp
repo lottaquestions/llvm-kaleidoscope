@@ -6,6 +6,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <stdexcept>
+#include <llvm/IR/IRBuilder.h>
 
 // To compile:
 // clang++ -stdlib=libc++ -g -O3 toy.cpp `llvm-config --cxxflags` -o toy.bin
@@ -16,38 +18,38 @@
 
 //  Tests to run in the kaliedoscop REPL:
 //  ~/work/compiler_design/Kaleidoscope$ ./toy.bin 
-//  ready> def foo(x y) x+foo(y, 4.0);
-//  ready> Parsed a function definition.
-//  ready> def foo(x y) x+y y;
-//  ready> Parsed a function definition.
-//  ready> Parsed a top-level expression.
-//  ready> def foo(x y) x+y );
-//  ready> Parsed a function definition.
-//  ready> Error: unknown token when expecting an expression
-//  ready> extern sin(a);
-//  ready> Parsed an extern.
-//  ready> 
+      //  ready> def foo(x y) x+foo(y, 4.0);
+      //  ready> Parsed a function definition.
+      //  ready> def foo(x y) x+y y;
+      //  ready> Parsed a function definition.
+      //  ready> Parsed a top-level expression.
+      //  ready> def foo(x y) x+y );
+      //  ready> Parsed a function definition.
+      //  ready> Error: unknown token when expecting an expression
+      //  ready> extern sin(a);
+      //  ready> Parsed an extern.
+      //  ready>
  
 
 
-//=============================================
-// Lexer
-//=============================================
+      //=============================================
+      // Lexer
+      //=============================================
 
-// The lexer returns tokens [0-255] if it is an uknown character, otherwise one
-// of these for known things.
+      // The lexer returns tokens [0-255] if it is an uknown character, otherwise one
+      // of these for known things.
 
 enum Token {
-  tok_eof = -1,
+        tok_eof = -1,
 
-  // commands
-  tok_def = -2,
-  tok_extern = -3,
+        // commands
+        tok_def = -2,
+        tok_extern = -3,
 
-  //primary
-  tok_identifier = -4,
-  tok_number = -5
-};
+        //primary
+        tok_identifier = -4,
+        tok_number = -5
+      };
 
 static std::string IdentifierStr; // Filled in if tok_identifier
 static double NumVal; // Filled in if tok_number
@@ -65,11 +67,11 @@ static int gettok(){
     while (isalnum((LastChar = getchar())))
       IdentifierStr += LastChar;
 
-      if (IdentifierStr == "def")
-        return tok_def;
-      if (IdentifierStr == "extern")
-        return tok_extern;
-      return tok_identifier;
+    if (IdentifierStr == "def")
+      return tok_def;
+    if (IdentifierStr == "extern")
+      return tok_extern;
+    return tok_identifier;
   }
 
   if (isdigit(LastChar) || LastChar == '.'){ // Number: [0-9]+
@@ -113,66 +115,68 @@ static int gettok(){
 
 namespace{
 
-// ExprAST - Base class for all expression nodes.
-class ExprAST{
-public:
-  virtual ~ExprAST() = default;
-  virtual Value *codegen() = 0;
-};
+  using llvm::Value;
+  // ExprAST - Base class for all expression nodes.
+  class ExprAST{
+  public:
+    virtual ~ExprAST() = default;
+    virtual Value *codegen() {
+      throw std::runtime_error("codegen: nyi1");
+    };
+  };
 
-// NumberExprAST - Expression class for numeric literals like "1.0".
-class NumberExprAST : public ExprAST{
-  double Val;
-public:
-  NumberExprAST(double Val) : Val(Val){}
-  Value *codegen() override;
-};
+  // NumberExprAST - Expression class for numeric literals like "1.0".
+  class NumberExprAST : public ExprAST{
+    double Val;
+  public:
+    NumberExprAST(double Val) : Val(Val){}
+  };
 
-// VariableExprAST - Expression class for referencing a variable, like "a"
-class VariableExprAST : public ExprAST{
-  std::string Name;
-public:
-  VariableExprAST(const std::string& Name) : Name(Name){}
-};
+  // VariableExprAST - Expression class for referencing a variable, like "a"
+  class VariableExprAST : public ExprAST{
+    std::string Name;
+  public:
+    VariableExprAST(const std::string& Name) : Name(Name){}
+  };
 
-// BinaryExprAST - Expression class for a binary operator
-class BinaryExprAST : public ExprAST{
-  char Op;
-  std::unique_ptr<ExprAST> LHS, RHS;
+  // BinaryExprAST - Expression class for a binary operator
+  class BinaryExprAST : public ExprAST{
+    char Op;
+    std::unique_ptr<ExprAST> LHS, RHS;
 
-public:
-  BinaryExprAST(char Op, std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
-  : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)){}
-};
+  public:
+    BinaryExprAST(char Op, std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
+      : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)){}
+  };
 
-// CallExprAST - Expression class for function calls
-class CallExprAST : public ExprAST{
-  std::string Callee;
-  std::vector<std::unique_ptr<ExprAST>> Args;
-public:
-  CallExprAST(const std::string& Callee, std::vector<std::unique_ptr<ExprAST>> Args)
-  : Callee(Callee), Args(std::move(Args)){}
-};
+  // CallExprAST - Expression class for function calls
+  class CallExprAST : public ExprAST{
+    std::string Callee;
+    std::vector<std::unique_ptr<ExprAST>> Args;
+  public:
+    CallExprAST(const std::string& Callee, std::vector<std::unique_ptr<ExprAST>> Args)
+      : Callee(Callee), Args(std::move(Args)){}
+  };
 
-// PrototypeAST - This class represents the prototype of a funtion,
-// which captures its name, and its argument names (thus implicitly the number of arguments the function takes).
-class PrototypeAST{
-  std::string Name;
-  std::vector<std::string> Args;
-public:
-  PrototypeAST(const std::string& Name, std::vector<std::string> Args)
-  : Name(Name), Args(std::move(Args)){}
+  // PrototypeAST - This class represents the prototype of a funtion,
+  // which captures its name, and its argument names (thus implicitly the number of arguments the function takes).
+  class PrototypeAST{
+    std::string Name;
+    std::vector<std::string> Args;
+  public:
+    PrototypeAST(const std::string& Name, std::vector<std::string> Args)
+      : Name(Name), Args(std::move(Args)){}
 
-  const std::string& getName() const {return Name;}
-};
+    const std::string& getName() const {return Name;}
+  };
 
-// FunctionAST - This class represents a function definition itself
-class FunctionAST{
-  std::unique_ptr<PrototypeAST> Proto;
-  std::unique_ptr<ExprAST> Body;
-public:
-  FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<ExprAST> Body) : Proto(std::move(Proto)), Body(std::move(Body)){}
-};
+  // FunctionAST - This class represents a function definition itself
+  class FunctionAST{
+    std::unique_ptr<PrototypeAST> Proto;
+    std::unique_ptr<ExprAST> Body;
+  public:
+    FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<ExprAST> Body) : Proto(std::move(Proto)), Body(std::move(Body)){}
+  };
 } // end of anonymous namespace
 
 // ================================
